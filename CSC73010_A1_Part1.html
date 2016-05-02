@@ -8,24 +8,42 @@
 	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
 
 	<script>
-	var url = "http://localhost/prog_mob_a1/CSC73010_A1_Part1_Data.html";
+        var url = "http://localhost:63342/prog_mob_a1/CSC73010_A1_Part1_Data.html";
+        var contactDetails = []; // data array from server/data file
+        var contactHeaders = [];
 
-	$(document).ready(function() {
-		$("#pageData").load()
-	});
+        $(document).ready(function() {
+            $("#pageData").load(url+"#contactData", function (resp, status, xhr) {
+                if (status=="error") { // data loading error
+                    alert("There was an error loading the data: " + xhr.statusText);
+                }
+                else if (status=="success") {
+                    contactHeaders = $("th",$("#contactData")).map(function() {
+                        return this.innerHTML;
+                    }).get();
+
+                    contactDetails = $("tr",$("#contactData")).map(function() {
+                        return [$("td",this).map(function() {
+                            return this.innerHTML;
+                        }).get()];
+                    }).get();
+                    alert(contactDetails);
+                }
+            });
+        });
 	</script>
 
 </head>
 <body>
 
-	<div class="pageData"></div>
+	<div id="pageData"></div>
 
 	<div data-role="page">
 		<div data-role="header">
 			<h1>Welcome To My Homepage</h1>
 		</div>
 		<div data-role="main" class="ui-content">
-			<p>I Am Now A Mobile Developer!!</p>
+			<p>I Am Now A Mobile Developer!!!</p>
 		</div>
 		<div data-role="footer">
 			<h1>Footer Text</h1>
