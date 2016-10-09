@@ -8,21 +8,21 @@
 	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
 
 	<script>
-        var url = "http://localhost:63342/prog_mob_a1/CSC73010_A1_Part1_Data.html";
+        var url = "http://spike.scu.edu.au/~barry/CSC73010/contacts.html";
         var contactDetails = []; // data array from server/data file
         var contactHeaders = [];
 
         $(document).ready(function() {
-            $("#pageData").load(url+"#contactData", function (resp, status, xhr) {
+            $("#pageData").load(url+"#myData", function (resp, status, xhr) {
                 if (status=="error") { // data loading error
                     alert("There was an error loading the data: " + xhr.statusText);
                 }
                 else if (status=="success") {
-                    contactHeaders = $("th",$("#contactData")).map(function() {
+                    contactHeaders = $("th",$("#myData")).map(function() {
                         return this.innerHTML;
                     }).get();
 
-                    contactDetails = $("tr",$("#contactData")).map(function() {
+                    contactDetails = $("tr",$("#myData")).map(function() {
                         return [$("td",this).map(function() {
                             return this.innerHTML;
                         }).get()];
