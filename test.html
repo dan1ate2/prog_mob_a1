@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>CSC73010 Part1 dhogan15</title>
+ 	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+    <link rel="stylesheet" href="custom.css" />
+	<script src="http://code.jquery.com/jquery-1.12.0.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+
+	<script>
+        var url = "http://spike.scu.edu.au/~barry/CSC73010/contacts.html";
+        // var contacts = []; // data array from server/data file
+
+        //var result = [];
+
+        $(document).ready(function() {
+            //$("#dataHolder").hide();
+            $("#dataHolder").load(url+"#myData", function (resp, status, xhr) {
+                if (status=="error") { // data loading error
+                    alert("There was an error loading the data: " + xhr.statusText);
+                }
+                else if (status=="success") {
+                    // var i = 0; // counter
+                    // go through each table row from data source
+                    // $("#myData tr").each( function () {
+                    //     $("#record").html($(this));
+                    //     var recordData = [];
+                    //     var j=0;
+                    //     $("#record td").each(function () {
+                    //         recordData[j++] = $(this).text();
+                    //     });
+                    //     if (recordData.length > 0) {
+                    //         contact[i++] = {"code":recordData[0],
+                    //                     "name":recordData[1],
+                    //                     "assessor":recordData[2]};
+                    //     }
+                    // });
+
+                    // get table row data and put into items list/object
+                    // skip first row with table headers
+                    var contactDetails = $('#myData tr:not(:first-child)').map(function () {
+                        var children = $(this).children();
+
+
+                        return {
+                           surname: children.eq(0).text(),
+                           othernames: children.eq(1).text(),
+                           company: children.eq(2).text(),
+                           email: children.eq(3).text(),
+                           phone1: children.eq(4).text(),
+                           phone2: children.eq(5).text(),
+                           snailmail: children.eq(6).text()
+                        };
+                    }).get();
+                    alert(contactDetails[0].surname);
+                    
+                    // $.get(url+"#myData",function(data) {
+                    //    $('#ulist').append('<li>' + data + '</li>');
+                    // })
+
+                    // putting data into body data attribute
+                    $("body").data("contact-details", contactDetails);
+                    alert(JSON.stringify(contactDetails));
+                }
+            });
+            // testing out using .data function
+            $("#footer").click(function(){
+                alert($("body").data("contact-details"));
+            });
+        });
+	</script>
+
+</head>
+<body data-contact-details="">
+    <div id="dataHolder"></div>
+    <div id="recordData"></div>
+    <div id="hello"></div>
+
+    <!-- MAIN PAGE -->
+	<div data-role="page">
+		<div data-role="header">
+			<h1>Contact Information for Units</h1>
+		</div>
+		<div data-role="main" class="ui-content">
+            <div id="pageData"></div>
+            <a href="#unitList" class="ui-btn">List contacts</a>
+		</div>
+		<div data-role="footer" id="footer">
+			<h1>Footer Text</h1>
+		</div>
+	</div>
+
+    <!-- VIEW UNITS PAGE -->
+    <div data-role="page" id="unitList">
+      <div data-role="header">
+        <h1>Unit List</h1>
+      </div>
+      <div data-role="main">
+          <ul data-role="listview" data-inset="true" id="ulist">
+          </ul>
+      </div>
+    </div>
+
+    <!-- EDIT UNITS PAGE -->
+</body>
+</html>

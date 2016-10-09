@@ -9,8 +9,7 @@
 
 	<script>
         var url = "http://spike.scu.edu.au/~barry/CSC73010/contacts.html";
-        var contactDetails = []; // data array from server/data file
-        var contactHeaders = [];
+        var units = []; // data array from server/data file
 
         $(document).ready(function() {
             $("#pageData").load(url+"#myData", function (resp, status, xhr) {
@@ -18,16 +17,35 @@
                     alert("There was an error loading the data: " + xhr.statusText);
                 }
                 else if (status=="success") {
-                    contactHeaders = $("th",$("#myData")).map(function() {
-                        return this.innerHTML;
-                    }).get();
+                    
+                    
+                    // var i = 0;
+                    // $("#myData tr").each( function () {
+                    //     $("#record").html($(this));
+                    //     var recdat = [];
+                    //     var j = 0;
+                    //     $("#record td").each(function () {
+                    //         recdat[j++] = $(this).text();
+                    //     });
+                    //     if (recdat.length > 0) {
+                    //         units[i++] = {"code":recdat[0],
+                    //                     "name":recdat[1],
+                    //                     "assessor":recdat[2]};
+                    //     }
+                    // });
 
-                    contactDetails = $("tr",$("#myData")).map(function() {
-                        return [$("td",this).map(function() {
-                            return this.innerHTML;
-                        }).get()];
-                    }).get();
-                    alert(contactDetails);
+
+                    // contactHeaders = $("th",$("#myData")).map(function() {
+                    //     return this.innerHTML;
+                    // }).get();
+
+                    // contactDetails = $("tr",$("#myData")).map(function() {
+                    //     return [$("td",this).map(function() {
+                    //         return this.innerHTML;
+                    //     }).get()];
+                    // }).get();
+                    // alert(contactDetails);
+                    // document.write(contactDetails);
                 }
             });
         });
@@ -35,19 +53,32 @@
 
 </head>
 <body>
-
-	<div id="pageData"></div>
-
+    <!-- <div id="record"></div> -->
+    <!-- MAIN PAGE -->
 	<div data-role="page">
 		<div data-role="header">
-			<h1>Welcome To My Homepage</h1>
+			<h1>Contact Information for Units</h1>
 		</div>
 		<div data-role="main" class="ui-content">
-			<p>I Am Now A Mobile Developer!!!</p>
+            <div id="pageData"></div>
+            <a href="#unitList" class="ui-btn">List units</a>
 		</div>
 		<div data-role="footer">
 			<h1>Footer Text</h1>
 		</div>
 	</div>
+
+    <!-- VIEW UNITS PAGE -->
+    <div data-role="page" id="unitList">
+      <div data-role="header">
+        <h1>Unit List</h1>
+      </div>
+      <div data-role="main">
+          <ul data-role="listview" data-inset="true" id="ulist">
+          </ul>
+      </div>
+    </div>
+
+    <!-- EDIT UNITS PAGE -->
 </body>
 </html>
