@@ -53,20 +53,23 @@
                            snailmail: children.eq(6).text()
                         };
                     }).get();
-                    alert(contactDetails[0].surname);
+                    alert("The surname is " + contactDetails[0].surname);
                     
                     // $.get(url+"#myData",function(data) {
                     //    $('#ulist').append('<li>' + data + '</li>');
                     // })
 
-                    // putting data into body data attribute
+                    // put data into body data attribute
                     $("body").data("contact-details", contactDetails);
-                    alert(JSON.stringify(contactDetails));
+                    
+                    // print array data from temp data variable
+                    // alert(JSON.stringify(contactDetails));
                 }
             });
             // testing out using .data function
             $("#footer").click(function(){
-                alert($("body").data("contact-details"));
+                // print array data from body data attribute
+                alert(JSON.stringify( $("body").data("contact-details")) );
             });
         });
 	</script>
@@ -74,8 +77,8 @@
 </head>
 <body data-contact-details="">
     <div id="dataHolder"></div>
-    <div id="recordData"></div>
-    <div id="hello"></div>
+    <!-- <div id="recordData"></div> -->
+    <!-- <div id="hello"></div> -->
 
     <!-- MAIN PAGE -->
 	<div data-role="page">
