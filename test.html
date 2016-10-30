@@ -10,8 +10,9 @@
 
 	<script>
         var url = "http://spike.scu.edu.au/~barry/CSC73010/contacts.html";
+        var contactDetails = [];
+        var selectedContact = 1;
         // var contacts = []; // data array from server/data file
-
         //var result = [];
 
         $(document).ready(function() {
@@ -39,7 +40,7 @@
 
                     // get table row data and put into items list/object
                     // skip first row with table headers
-                    var contactDetails = $('#myData tr:not(:first-child)').map(function () {
+                    contactDetails = $('#myData tr:not(:first-child)').map(function () {
                         var children = $(this).children();
 
 
@@ -53,7 +54,9 @@
                            snailmail: children.eq(6).text()
                         };
                     }).get();
-                    alert("The surname is " + contactDetails[0].surname);
+
+                    // test getting data from temp variable
+                    // alert("The surname is " + contactDetails[0].surname);
                     
                     // $.get(url+"#myData",function(data) {
                     //    $('#ulist').append('<li>' + data + '</li>');
@@ -72,6 +75,35 @@
                 alert(JSON.stringify( $("body").data("contact-details")) );
             });
         });
+
+        $(document).on("pagebeforeshow","#contactList", function() {
+            $("#clist").empty();
+            // sort arrays in array
+            contactDetails.sort(function (a, b){
+                var aSurname = a.surname.toLowerCase();
+                var bSurname = b.surname.toLowerCase();
+                // compare & sort each arrays surname alphabetically (shorthand)
+                return ((aSurname < bSurname) ? -1 : ((aSurname > bSurname) ? 1 : 0));
+            });
+            for (var i=0; i<contactDetails.length; i++){  
+                // add <li><a... to list elements
+               $("#clist").append("<li><a href='#edit' id='list"+i+"'>" + contactDetails[i].surname+", "+contactDetails[i].othernames+"<a></li>");
+            }
+            $("#clist").listview("refresh");  
+            // refresh jquery mobile list
+            // have to insert event handler after list refreshed!!!!
+            // because html element not there yet
+            for (var i=0; i<contactDetails.length; i++){  
+                // add <li><a... to list elements
+                $("#list"+i).on("tap", i, function (evt) { 
+                    // nb - value passed as parameter!
+                    selectedContact=evt.data;
+                    // value extracted by evt.data 
+                });
+            }
+        });
+
+
 	</script>
 
 </head>
@@ -81,13 +113,13 @@
     <!-- <div id="hello"></div> -->
 
     <!-- MAIN PAGE -->
-	<div data-role="page">
+	<div data-role="page" id="main">
 		<div data-role="header">
 			<h1>Contact Information for Units</h1>
 		</div>
 		<div data-role="main" class="ui-content">
             <div id="pageData"></div>
-            <a href="#unitList" class="ui-btn">List contacts</a>
+            <a href="#contactList" class="ui-btn">List contacts</a>
 		</div>
 		<div data-role="footer" id="footer">
 			<h1>Footer Text</h1>
@@ -95,12 +127,12 @@
 	</div>
 
     <!-- VIEW UNITS PAGE -->
-    <div data-role="page" id="unitList">
+    <div data-role="page" id="contactList">
       <div data-role="header">
-        <h1>Unit List</h1>
+        <h1>Contact List</h1>
       </div>
       <div data-role="main">
-          <ul data-role="listview" data-inset="true" id="ulist">
+          <ul data-role="listview" data-inset="true" id="clist" data-autodividers="true">
           </ul>
       </div>
     </div>
