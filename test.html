@@ -16,33 +16,17 @@
         //var result = [];
 
         $(document).ready(function() {
-            //$("#dataHolder").hide();
+            $("#dataHolder").hide();
             $("#dataHolder").load(url+"#myData", function (resp, status, xhr) {
                 if (status=="error") { // data loading error
                     alert("There was an error loading the data: " + xhr.statusText);
                 }
                 else if (status=="success") {
-                    // var i = 0; // counter
-                    // go through each table row from data source
-                    // $("#myData tr").each( function () {
-                    //     $("#record").html($(this));
-                    //     var recordData = [];
-                    //     var j=0;
-                    //     $("#record td").each(function () {
-                    //         recordData[j++] = $(this).text();
-                    //     });
-                    //     if (recordData.length > 0) {
-                    //         contact[i++] = {"code":recordData[0],
-                    //                     "name":recordData[1],
-                    //                     "assessor":recordData[2]};
-                    //     }
-                    // });
 
                     // get table row data and put into items list/object
                     // skip first row with table headers
                     contactDetails = $('#myData tr:not(:first-child)').map(function () {
                         var children = $(this).children();
-
 
                         return {
                            surname: children.eq(0).text(),
@@ -55,29 +39,35 @@
                         };
                     }).get();
 
-                    // test getting data from temp variable
-                    // alert("The surname is " + contactDetails[0].surname);
-                    
-                    // $.get(url+"#myData",function(data) {
-                    //    $('#ulist').append('<li>' + data + '</li>');
-                    // })
-
                     // put data into body data attribute
                     $("body").data("contact-details", contactDetails);
-                    
-                    // print array data from temp data variable
-                    // alert(JSON.stringify(contactDetails));
                 }
             });
-            // testing out using .data function
+
+            // testing out using .data function !!!!!!!!!
             $("#footer").click(function(){
                 // print array data from body data attribute
                 alert(JSON.stringify( $("body").data("contact-details")) );
             });
+
+            // testing out form submit !!!!!!!!!
+            $( "#contactform" ).submit(function( event ) {
+                alert( "Handler for contact form called." ); // testing!!!
+
+                // save new data
+                
+
+                // load contact list page
+                $( "#contactList" ).pagecontainer( "change" );
+                event.preventDefault();
+            });
+
         });
 
+        // prepare contact list page
         $(document).on("pagebeforeshow","#contactList", function() {
             $("#clist").empty();
+            
             // sort arrays in array
             contactDetails.sort(function (a, b){
                 var aSurname = a.surname.toLowerCase();
@@ -85,24 +75,36 @@
                 // compare & sort each arrays surname alphabetically (shorthand)
                 return ((aSurname < bSurname) ? -1 : ((aSurname > bSurname) ? 1 : 0));
             });
+
             for (var i=0; i<contactDetails.length; i++){  
-                // add <li><a... to list elements
-               $("#clist").append("<li><a href='#edit' id='list"+i+"'>" + contactDetails[i].surname+", "+contactDetails[i].othernames+"<a></li>");
+                
+                // add list html to elements
+                $("#clist").append("<li><a href='#edit' id='list"+i+"'>" + contactDetails[i].surname+", "+contactDetails[i].othernames+"<a></li>");
             }
-            $("#clist").listview("refresh");  
-            // refresh jquery mobile list
+
+            $("#clist").listview("refresh"); // refresh jquery mobile list
+            
             // have to insert event handler after list refreshed!!!!
             // because html element not there yet
             for (var i=0; i<contactDetails.length; i++){  
-                // add <li><a... to list elements
+                
+                // add list html to elements
                 $("#list"+i).on("tap", i, function (evt) { 
-                    // nb - value passed as parameter!
-                    selectedContact=evt.data;
-                    // value extracted by evt.data 
+                    selectedContact=evt.data; // value extracted by evt.data 
                 });
             }
         });
 
+        // prepare edit contact page
+        $(document).on("pagebeforeshow","#edit", function() {
+            $("#surname").val(contactDetails[selectedContact].surname);
+            $("#othername").val(contactDetails[selectedContact].othernames);
+            $("#company").val(contactDetails[selectedContact].company);
+            $("#email").val(contactDetails[selectedContact].email);
+            $("#phone1").val(contactDetails[selectedContact].phone1);
+            $("#phone2").val(contactDetails[selectedContact].phone2);
+            $("#snailmail").val(contactDetails[selectedContact].snailmail);
+        });
 
 	</script>
 
@@ -126,7 +128,7 @@
 		</div>
 	</div>
 
-    <!-- VIEW UNITS PAGE -->
+    <!-- VIEW CONTACTS PAGE -->
     <div data-role="page" id="contactList">
       <div data-role="header">
         <h1>Contact List</h1>
@@ -137,6 +139,30 @@
       </div>
     </div>
 
-    <!-- EDIT UNITS PAGE -->
+    <!-- EDIT CONTACTS PAGE -->
+    <div data-role="page" id="edit">
+        <div data-role="header">
+            <h1>Edit Contact</h1>
+        </div>
+        <div data-role="main">
+            <form method="post" action="" id="contactform">
+                <label for="surname">Surname:</label>
+                <input type="text" id="surname"></input>
+                <label for="othername">Other Names:</label>
+                <input type="text" id="othername"></input>
+                <label for="company">Company:</label>
+                <input type="text" id="company"></input>
+                <label for="email">Email:</label>
+                <input type="text" id="email"></input>
+                <label for="phone1">Phone 1:</label>
+                <input type="text" id="phone1"></input>
+                <label for="phone2">Phone 2:</label>
+                <input type="text" id="phone2"></input>
+                <label for="snailmail">Snail Mail:</label>
+                <input type="text" id="snailmail"></input>
+                <input type="submit" value="Update">
+            </form>
+        </div>
+    </div>
 </body>
 </html>
