@@ -50,12 +50,27 @@
                 alert(JSON.stringify( $("body").data("contact-details")) );
             });
 
-            // testing out form submit !!!!!!!!!
+            // update contact data from edit contact page (form)
             $( "#contactform" ).submit(function( event ) {
                 alert( "Handler for contact form called." ); // testing!!!
 
-                // save new data
-                
+                var detail = $(this).serializeArray(); // put form data into array
+
+                // returns key value array with contact data
+                function updateContact () {
+                    var arr = [];
+                    $(detail).each(function() {
+                        var n = $(this).attr("name");
+                        var v = $(this).attr("value");
+                        if (v == null) {
+                            v = "";
+                        }
+                        arr[n] = v;
+                    });
+                    return arr;
+                };
+
+                contactDetails[selectedContact] = updateContact();
 
                 // load contact list page
                 $( "#contactList" ).pagecontainer( "change" );
@@ -98,7 +113,7 @@
         // prepare edit contact page
         $(document).on("pagebeforeshow","#edit", function() {
             $("#surname").val(contactDetails[selectedContact].surname);
-            $("#othername").val(contactDetails[selectedContact].othernames);
+            $("#othernames").val(contactDetails[selectedContact].othernames);
             $("#company").val(contactDetails[selectedContact].company);
             $("#email").val(contactDetails[selectedContact].email);
             $("#phone1").val(contactDetails[selectedContact].phone1);
@@ -147,19 +162,19 @@
         <div data-role="main">
             <form method="post" action="" id="contactform">
                 <label for="surname">Surname:</label>
-                <input type="text" id="surname"></input>
-                <label for="othername">Other Names:</label>
-                <input type="text" id="othername"></input>
+                <input type="text" id="surname" name="surname"></input>
+                <label for="othernames">Other Names:</label>
+                <input type="text" id="othernames" name="othernames"></input>
                 <label for="company">Company:</label>
-                <input type="text" id="company"></input>
+                <input type="text" id="company" name="company"></input>
                 <label for="email">Email:</label>
-                <input type="text" id="email"></input>
+                <input type="text" id="email" name="email"></input>
                 <label for="phone1">Phone 1:</label>
-                <input type="text" id="phone1"></input>
+                <input type="text" id="phone1" name="phone1"></input>
                 <label for="phone2">Phone 2:</label>
-                <input type="text" id="phone2"></input>
+                <input type="text" id="phone2" name="phone2"></input>
                 <label for="snailmail">Snail Mail:</label>
-                <input type="text" id="snailmail"></input>
+                <input type="text" id="snailmail" name="snailmail"></input>
                 <input type="submit" value="Update">
             </form>
         </div>
