@@ -12,8 +12,6 @@
         var url = "http://spike.scu.edu.au/~barry/CSC73010/contacts.html";
         var contactDetails = [];
         var selectedContact = 1;
-        // var contacts = []; // data array from server/data file
-        //var result = [];
 
         $(document).ready(function() {
             $("#dataHolder").hide();
@@ -54,28 +52,48 @@
             $( "#contactform" ).submit(function( event ) {
                 alert( "Handler for contact form called." ); // testing!!!
 
-                var detail = $(this).serializeArray(); // put form data into array
+                // put form data into array
+                var detail = $(this).serializeArray();
 
-                // returns key value array with contact data
-                function updateContact () {
-                    var arr = [];
-                    $(detail).each(function() {
-                        var n = $(this).attr("name");
-                        var v = $(this).attr("value");
-                        if (v == null) {
-                            v = "";
-                        }
-                        arr[n] = v;
-                    });
-                    return arr;
-                };
+                // update local data with updated contact details
+                contactDetails[selectedContact] = updateContact(detail);
 
-                contactDetails[selectedContact] = updateContact();
+
+
+
+
+                sessionStorage.setObj("contacts", contactDetails);
+                
+
+
+
 
                 // load contact list page
                 $( "#contactList" ).pagecontainer( "change" );
                 event.preventDefault();
             });
+
+            // returns key value array for contact data
+            function updateContact (d) {
+                var arr = {};
+                $(d).each(function() {
+                    var n = $(this).attr("name"); // field name
+                    var v = $(this).attr("value"); // contact data
+                    if (v == null) {
+                        v = ""; // avoids undefined when empty field
+                    }
+                    arr[n] = v;
+                });
+                return arr;
+            };
+
+            // extend localstorage to hold objects
+            Storage.prototype.setObj = function(key, obj) {
+                return this.setItem(key, JSON.stringify(obj))
+            }
+            Storage.prototype.getObj = function(key) {
+                return JSON.parse(this.getItem(key))
+            }
 
         });
 
@@ -126,8 +144,6 @@
 </head>
 <body data-contact-details="">
     <div id="dataHolder"></div>
-    <!-- <div id="recordData"></div> -->
-    <!-- <div id="hello"></div> -->
 
     <!-- MAIN PAGE -->
 	<div data-role="page" id="main">
