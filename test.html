@@ -9,98 +9,39 @@
 	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
 
 	<script>
-        var url = "http://spike.scu.edu.au/~barry/CSC73010/contacts.html";
+        const DEFAULT_URL = "http://spike.scu.edu.au/~barry/CSC73010/contacts.html";
+        var url = DEFAULT_URL;
+        var newUrl = false;
         var contactDetails = [];
         var selectedContact = 1;
 
-        $(document).ready(function() {
-            $("#dataHolder").hide();
-            $("#dataHolder").load(url+"#myData", function (resp, status, xhr) {
-                if (status=="error") { // data loading error
-                    alert("There was an error loading the data: " + xhr.statusText);
+        // extends localstorage to hold objects
+        // set the contacts in local storage
+        Storage.prototype.setObj = function(key, obj) {
+            sortContacts();
+            return this.setItem(key, JSON.stringify(obj))
+        };
+        // get the contacts from local storage
+        Storage.prototype.getObj = function(key) {
+            return JSON.parse(this.getItem(key))
+        };
+
+        // returns key value array for contact data
+        function updateContact (d) {
+            var arr = {};
+            $(d).each(function() {
+                var n = $(this).attr("name"); // field name
+                var v = $(this).attr("value"); // contact data
+                if (v == null) {
+                    v = ""; // avoids undefined when empty field
                 }
-                else if (status=="success") {
-
-                    // get table row data and put into items list/object
-                    // skip first row with table headers
-                    contactDetails = $('#myData tr:not(:first-child)').map(function () {
-                        var children = $(this).children();
-
-                        return {
-                           surname: children.eq(0).text(),
-                           othernames: children.eq(1).text(),
-                           company: children.eq(2).text(),
-                           email: children.eq(3).text(),
-                           phone1: children.eq(4).text(),
-                           phone2: children.eq(5).text(),
-                           snailmail: children.eq(6).text()
-                        };
-                    }).get();
-
-                    // put data into body data attribute
-                    $("body").data("contact-details", contactDetails);
-                }
+                arr[n] = v;
             });
+            return arr;
+        };
 
-            // testing out using .data function !!!!!!!!!
-            $("#footer").click(function(){
-                // print array data from body data attribute
-                alert(JSON.stringify( $("body").data("contact-details")) );
-            });
-
-            // update contact data from edit contact page (form)
-            $( "#contactform" ).submit(function( event ) {
-                alert( "Handler for contact form called." ); // testing!!!
-
-                // put form data into array
-                var detail = $(this).serializeArray();
-
-                // update local data with updated contact details
-                contactDetails[selectedContact] = updateContact(detail);
-
-
-
-
-
-                sessionStorage.setObj("contacts", contactDetails);
-                
-
-
-
-
-                // load contact list page
-                $( "#contactList" ).pagecontainer( "change" );
-                event.preventDefault();
-            });
-
-            // returns key value array for contact data
-            function updateContact (d) {
-                var arr = {};
-                $(d).each(function() {
-                    var n = $(this).attr("name"); // field name
-                    var v = $(this).attr("value"); // contact data
-                    if (v == null) {
-                        v = ""; // avoids undefined when empty field
-                    }
-                    arr[n] = v;
-                });
-                return arr;
-            };
-
-            // extend localstorage to hold objects
-            Storage.prototype.setObj = function(key, obj) {
-                return this.setItem(key, JSON.stringify(obj))
-            }
-            Storage.prototype.getObj = function(key) {
-                return JSON.parse(this.getItem(key))
-            }
-
-        });
-
-        // prepare contact list page
-        $(document).on("pagebeforeshow","#contactList", function() {
-            $("#clist").empty();
-            
+        // sorts contacts by surname in alphabetical order
+        function sortContacts() {
             // sort arrays in array
             contactDetails.sort(function (a, b){
                 var aSurname = a.surname.toLowerCase();
@@ -108,10 +49,106 @@
                 // compare & sort each arrays surname alphabetically (shorthand)
                 return ((aSurname < bSurname) ? -1 : ((aSurname > bSurname) ? 1 : 0));
             });
+        };
 
+        function loadContactData() {
+            // only load data if none pre-existing or new url
+            if ((newUrl) || (sessionStorage.getObj("contacts") === null)) {
+                // load contact data
+                $("#dataHolder").load(url+"#myData", function (resp, status, xhr) {
+                    if (status=="error") { // data loading error
+                        alert("There was an error loading the data: " + xhr.statusText);
+                        url = DEFAULT_URL; // reset to default
+                    }
+                    else if (status=="success") {
+
+                        // get table row data and put into object
+                        // skip first row with table headers
+                        contactDetails = $('#myData tr:not(:first-child)').map(function () {
+                            var children = $(this).children();
+
+                            return {
+                               surname: children.eq(0).text(),
+                               othernames: children.eq(1).text(),
+                               company: children.eq(2).text(),
+                               email: children.eq(3).text(),
+                               phone1: children.eq(4).text(),
+                               phone2: children.eq(5).text(),
+                               snailmail: children.eq(6).text()
+                            };
+                        }).get();
+
+                        // put data into localstorage
+                        sessionStorage.setObj("contacts", contactDetails);
+                        newUrl = false; // set back to default
+                    }
+                });
+            }
+        };
+
+        $(document).ready(function() {
+            $("#dataHolder").hide();
+
+            loadContactData();
+
+            // update contact data from edit contact page form
+            $( "#contactform" ).submit(function( event ) {
+                var newDetails = $(this).serializeArray(); // put form data into array
+                contactDetails = sessionStorage.getObj("contacts");
+                contactDetails[selectedContact] = updateContact(newDetails);
+                sessionStorage.setObj("contacts", contactDetails);
+                $("body").pagecontainer("change", "#contactList", {  }); // load contact list page
+                event.preventDefault();
+            });
+
+            // update config data from config form
+            $( "#configform" ).submit(function( event ) {
+                var configDetails = $(this).serializeArray(); // put form data into array
+                var newU;
+
+                while (!newUrl) {
+                    $(configDetails).each(function() {
+                        var n = $(this).attr("name");
+                        // if name contains 'baseurl'
+                        if (n === "baseurl"){
+                            newUrl = true;
+                            newU = $(this).attr("value");
+                        };
+                    });
+                };
+
+                // set new base url if given
+                if (newUrl) {
+                    url = newU;
+                    // try and add new data
+                    loadContactData();
+                };
+                $("body").pagecontainer("change", "#main", {  }); // load homepage
+                event.preventDefault();
+            });
+
+            // add contact data from add contact form
+            $( "#addcontactform" ).submit(function( event ) {
+                var newDetails = $(this).serializeArray(); // put form data into array
+                var newDetailsObj = updateContact(newDetails);
+
+                // format array and add to local storage
+                contactDetails = sessionStorage.getObj("contacts");
+                contactDetails.push(newDetailsObj);
+                sessionStorage.setObj("contacts", contactDetails);
+                $("body").pagecontainer("change", "#contactList", {  }); // load contact list page
+                event.preventDefault();
+            });
+
+        }); // end of document ready functions
+
+        // prepare contact list page
+        $(document).on("pagebeforeshow","#contactList", function() {
+            $("#clist").empty();
+            contactDetails = sessionStorage.getObj("contacts"); // get contacts
+
+            // add html to create list elements
             for (var i=0; i<contactDetails.length; i++){  
-                
-                // add list html to elements
                 $("#clist").append("<li><a href='#edit' id='list"+i+"'>" + contactDetails[i].surname+", "+contactDetails[i].othernames+"<a></li>");
             }
 
@@ -130,6 +167,10 @@
 
         // prepare edit contact page
         $(document).on("pagebeforeshow","#edit", function() {
+
+            // get data from local storage
+            contactDetails = sessionStorage.getObj("contacts");
+
             $("#surname").val(contactDetails[selectedContact].surname);
             $("#othernames").val(contactDetails[selectedContact].othernames);
             $("#company").val(contactDetails[selectedContact].company);
@@ -137,6 +178,12 @@
             $("#phone1").val(contactDetails[selectedContact].phone1);
             $("#phone2").val(contactDetails[selectedContact].phone2);
             $("#snailmail").val(contactDetails[selectedContact].snailmail);
+        });
+
+        //prepare config page 
+        
+        $(document).on("pagebeforeshow","#config", function() {
+            document.getElementById("baseurl").value = url;
         });
 
 	</script>
@@ -152,12 +199,29 @@
 		</div>
 		<div data-role="main" class="ui-content">
             <div id="pageData"></div>
+            <a href="#addcontact" class="ui-btn">Add contacts</a>
             <a href="#contactList" class="ui-btn">List contacts</a>
+            <a href="#config" class="ui-btn">Configuration</a>
 		</div>
 		<div data-role="footer" id="footer">
 			<h1>Footer Text</h1>
 		</div>
 	</div>
+
+    <!-- CONFIG PAGE -->
+    <div data-role="page" id="config">
+        <div data-role="header">
+            <h1>Configuration Options</h1>
+        </div>
+        <div data-role="main">
+            <a href="#main" class="ui-btn" data-inset="true">Homepage</a>
+            <form method="post" id="configform">
+                <label for="baseurl">Base URL to collect data:</label>
+                <input type="text" id="baseurl" name="baseurl" default="hello"></input>
+                <input type="submit" value="Update">
+            </form>
+        </div>
+    </div>
 
     <!-- VIEW CONTACTS PAGE -->
     <div data-role="page" id="contactList">
@@ -165,8 +229,9 @@
         <h1>Contact List</h1>
       </div>
       <div data-role="main">
-          <ul data-role="listview" data-inset="true" id="clist" data-autodividers="true">
-          </ul>
+        <a href="#main" class="ui-btn" data-inset="true">Homepage</a>
+        <ul data-role="listview" data-inset="true" id="clist" data-autodividers="true">
+        </ul>
       </div>
     </div>
 
@@ -176,6 +241,7 @@
             <h1>Edit Contact</h1>
         </div>
         <div data-role="main">
+            <a href="#main" class="ui-btn" data-inset="true">Homepage</a>
             <form method="post" action="" id="contactform">
                 <label for="surname">Surname:</label>
                 <input type="text" id="surname" name="surname"></input>
@@ -195,5 +261,33 @@
             </form>
         </div>
     </div>
+
+    <!-- ADD CONTACTS PAGE -->
+    <div data-role="page" id="addcontact">
+      <div data-role="header">
+        <h1>Add Contact</h1>
+      </div>
+      <div data-role="main">
+        <a href="#main" class="ui-btn" data-inset="true">Homepage</a>
+        <form method="post" action="" id="addcontactform">
+            <label for="surname">Surname:</label>
+            <input type="text" id="surname" name="surname"></input>
+            <label for="othernames">Other Names:</label>
+            <input type="text" id="othernames" name="othernames"></input>
+            <label for="company">Company:</label>
+            <input type="text" id="company" name="company"></input>
+            <label for="email">Email:</label>
+            <input type="text" id="email" name="email"></input>
+            <label for="phone1">Phone 1:</label>
+            <input type="text" id="phone1" name="phone1"></input>
+            <label for="phone2">Phone 2:</label>
+            <input type="text" id="phone2" name="phone2"></input>
+            <label for="snailmail">Snail Mail:</label>
+            <input type="text" id="snailmail" name="snailmail"></input>
+            <input type="submit" value="Add Contact">
+        </form>
+      </div>
+    </div>
+
 </body>
 </html>
