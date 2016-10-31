@@ -101,6 +101,24 @@
                 event.preventDefault();
             });
 
+
+
+
+
+
+            // delete contact data from edit contact page form
+            $( "#deletecontact" ).bind( "click", function(event, ui) {
+                contactDetails = sessionStorage.getObj("contacts");
+                contactDetails.splice(selectedContact,1); // remove contact object from array
+                sessionStorage.setObj("contacts", contactDetails);
+                $("body").pagecontainer("change", "#contactList", {  }); // load contact list page
+            });
+
+
+
+
+
+
             // update config data from config form
             $( "#configform" ).submit(function( event ) {
                 var configDetails = $(this).serializeArray(); // put form data into array
@@ -230,7 +248,10 @@
       </div>
       <div data-role="main">
         <a href="#main" class="ui-btn" data-inset="true">Homepage</a>
-        <ul data-role="listview" data-inset="true" id="clist" data-autodividers="true">
+        <form class="ui-filterable">
+          <input id="searchContacts" data-type="search">
+        </form>
+        <ul data-role="listview" data-inset="true" id="clist" data-autodividers="true" data-filter="true" data-input="#searchContacts">
         </ul>
       </div>
     </div>
@@ -258,6 +279,7 @@
                 <label for="snailmail">Snail Mail:</label>
                 <input type="text" id="snailmail" name="snailmail"></input>
                 <input type="submit" value="Update">
+                <input type="button" value="Delete" id="deletecontact">
             </form>
         </div>
     </div>
