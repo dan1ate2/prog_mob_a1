@@ -87,6 +87,13 @@
             }
         };
 
+        function printUsername() {
+            // check if username exists in localstorage
+            if (!sessionStorage.username == "") {
+                $( ".login" ).html( "<p>Logged in as "+sessionStorage.username+"</p>" );
+            }
+        };
+
         $(document).ready(function() {
             $("#dataHolder").hide();
 
@@ -150,7 +157,31 @@
                 event.preventDefault();
             });
 
+            // login form
+            $( "#loginForm" ).submit(function( event ) {
+                var loginDetails = $(this).serializeArray();
+                var username;
+                while (username == null) {
+                    $(loginDetails).each(function() {
+                        var u = $(this).attr("name");
+                        // if name contains 'baseurl'
+                        if (u == "username"){
+                            username = $(this).attr("value");
+                            return false;
+                        };
+                    });
+                }
+                sessionStorage.setItem("username", username);
+                $("body").pagecontainer("change", "#main", {  }); // load homepage
+                event.preventDefault();
+            });
+
         }); // end of document ready functions
+
+        // prepare homepage
+        $(document).on("pagebeforeshow","#main", function() {
+            printUsername();
+        });
 
         // prepare contact list page
         $(document).on("pagebeforeshow","#contactList", function() {
@@ -209,7 +240,7 @@
         </div>
         <div data-role="main" class="ui-content">
             <center>
-                <a href="#homepageHelp" data-rel="popup" class="ui-btn ui-btn-a ui-btn-inline ui-corner-all">Help</a>
+                <a href="#homepageHelp" data-rel="popup" class="ui-btn ui-btn-a ui-btn-inline ui-corner-all ui-icon-info ui-btn-icon-left">Info</a>
                 <div data-role="popup" id="homepageHelp">
                     <p>This app allows you to view, add or delete contacts, and where the data is sourced from. Data must be in html table to work.</p>
                 </div>
@@ -218,6 +249,8 @@
             <a href="#addcontact" class="ui-btn">Add contacts</a>
             <a href="#contactList" class="ui-btn">List contacts</a>
             <a href="#config" class="ui-btn">Configuration</a>
+            <a href="#loginPage" class="ui-btn">Login</a>
+            <div class="login"></div>
         </div>
         <div data-role="footer" id="footer">
             <h1 style="color:black;">App by Dan Hogan - 22108261</h1>
@@ -232,7 +265,7 @@
         <div data-role="main">
             <a href="#main" class="ui-btn ui-btn-a" data-inset="true">Homepage</a>
             <center>
-                <a href="#configHelp" data-rel="popup" class="ui-btn ui-btn-a ui-btn-inline ui-corner-all">Help</a>
+                <a href="#configHelp" data-rel="popup" class="ui-btn ui-btn-a ui-btn-inline ui-corner-all ui-icon-info ui-btn-icon-left">Help</a>
                 <div data-role="popup" id="configHelp">
                     <p>The url is used for sourcing the contact data. The source file data must use a html table and be formatted correctly.</p>
                 </div>
@@ -255,7 +288,7 @@
       <div data-role="main">
         <a href="#main" class="ui-btn ui-btn-a" data-inset="true">Homepage</a>
         <center>
-            <a href="#viewContactsHelp" data-rel="popup" class="ui-btn ui-btn-a ui-btn-inline ui-corner-all">Help</a>
+            <a href="#viewContactsHelp" data-rel="popup" class="ui-btn ui-btn-a ui-btn-inline ui-corner-all ui-icon-info ui-btn-icon-left">Help</a>
             <div data-role="popup" id="viewContactsHelp">
                 <p>Use the search bar to search through contacts. Select a contact to edit or delete.</p>
             </div>
@@ -275,8 +308,9 @@
         </div>
         <div data-role="main">
             <a href="#main" class="ui-btn ui-btn-a" data-inset="true">Homepage</a>
+            <a href="#contactList" class="ui-btn ui-btn-a" data-inset="true">List Contacts</a>
             <center>
-                <a href="#editContactsHelp" data-rel="popup" class="ui-btn ui-btn-a ui-btn-inline ui-corner-all">Help</a>
+                <a href="#editContactsHelp" data-rel="popup" class="ui-btn ui-btn-a ui-btn-inline ui-corner-all ui-icon-info ui-btn-icon-left">Help</a>
                 <div data-role="popup" id="editContactsHelp">
                     <p>Update or add details for the contact, hit 'update' to update. Delete will remove the contact until a browser restart.</p>
                 </div>
@@ -312,7 +346,7 @@
       <div data-role="main">
         <a href="#main" class="ui-btn ui-btn-a" data-inset="true">Homepage</a>
         <center>
-            <a href="#addContactsHelp" data-rel="popup" class="ui-btn ui-btn-a ui-btn-inline ui-corner-all">Help</a>
+            <a href="#addContactsHelp" data-rel="popup" class="ui-btn ui-btn-a ui-btn-inline ui-corner-all ui-icon-info ui-btn-icon-left">Help</a>
             <div data-role="popup" id="addContactsHelp">
                 <p>Enter the details of the contact in the fields below and hit 'Add Contact' to save to the list of contacts.</p>
             </div>
@@ -349,6 +383,25 @@
             <p>Are you sure you wish to delete this contact?</p>
             <a href="#anylink" class="ui-btn ui-btn-inline ui-corner-all ui-shadow" id="deletecontact">Yes</a>
             <a href="#anylink" class="ui-btn ui-btn-inline ui-corner-all ui-shadow" data-rel="back">No</a>
+        </center>
+      </div>
+    </div>
+
+    <!-- LOGIN PAGE -->
+    <div data-role="page" id="loginPage" data-close-btn="right" data-theme="b">
+      <div data-role="header">
+        <h1>Login</h1>
+      </div>
+      <div data-role="main" class="ui-content">
+        <center>
+            <p>Please login below</p>
+            <form method="post" id="loginForm">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username"></input>
+                <label for="password">Password:</label>
+                <input type="password" name="password" id="password">
+                <input type="submit" value="Add Contact" data-inline="true">
+            </form>
         </center>
       </div>
     </div>
