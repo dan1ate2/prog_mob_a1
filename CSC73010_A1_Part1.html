@@ -1,84 +1,357 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<title>CSC73010 Part1 dhogan15</title>
- 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
-	<script src="http://code.jquery.com/jquery-1.12.0.min.js"></script>
-	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <title>CSC73010 A1P1 - Dan Hogan - 22108261</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="themes/jquery.mobile.icons.min.css" />
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+    <link rel="stylesheet" href="themes/csc73010_dan.min.css" />
+    <script src="http://code.jquery.com/jquery-1.12.0.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
 
-	<script>
-        var url = "http://spike.scu.edu.au/~barry/CSC73010/contacts.html";
-        var units = []; // data array from server/data file
+    <script>
+        const DEFAULT_URL = "http://spike.scu.edu.au/~barry/CSC73010/contacts.html";
+        var url = DEFAULT_URL;
+        var newUrl = false;
+        var contactDetails = [];
+        var selectedContact = 1;
+
+        // extends localstorage to hold objects
+        // set the contacts in local storage
+        Storage.prototype.setObj = function(key, obj) {
+            sortContacts();
+            return this.setItem(key, JSON.stringify(obj))
+        };
+        // get the contacts from local storage
+        Storage.prototype.getObj = function(key) {
+            return JSON.parse(this.getItem(key))
+        };
+
+        // returns key value array for contact data
+        function updateContact (d) {
+            var arr = {};
+            $(d).each(function() {
+                var n = $(this).attr("name"); // field name
+                var v = $(this).attr("value"); // contact data
+                if (v == null) {
+                    v = ""; // avoids undefined when empty field
+                }
+                arr[n] = v;
+            });
+            return arr;
+        };
+
+        // sorts contacts by surname in alphabetical order
+        function sortContacts() {
+            // sort arrays in array
+            contactDetails.sort(function (a, b){
+                var aSurname = a.surname.toLowerCase();
+                var bSurname = b.surname.toLowerCase();
+                // compare & sort each arrays surname alphabetically (shorthand)
+                return ((aSurname < bSurname) ? -1 : ((aSurname > bSurname) ? 1 : 0));
+            });
+        };
+
+        function loadContactData() {
+            // only load data if none pre-existing or new url
+            if ((newUrl) || (sessionStorage.getObj("contacts") === null)) {
+                // load contact data
+                $("#dataHolder").load(url+"#myData", function (resp, status, xhr) {
+                    if (status=="error") { // data loading error
+                        alert("There was an error loading the data: " + xhr.statusText);
+                        url = DEFAULT_URL; // reset to default
+                    }
+                    else if (status=="success") {
+
+                        // get table row data and put into object
+                        // skip first row with table headers
+                        contactDetails = $('#myData tr:not(:first-child)').map(function () {
+                            var children = $(this).children();
+
+                            return {
+                               surname: children.eq(0).text(),
+                               othernames: children.eq(1).text(),
+                               company: children.eq(2).text(),
+                               email: children.eq(3).text(),
+                               phone1: children.eq(4).text(),
+                               phone2: children.eq(5).text(),
+                               snailmail: children.eq(6).text()
+                            };
+                        }).get();
+
+                        // put data into localstorage
+                        sessionStorage.setObj("contacts", contactDetails);
+                        newUrl = false; // set back to default
+                    }
+                });
+            }
+        };
 
         $(document).ready(function() {
-            $("#pageData").load(url+"#myData", function (resp, status, xhr) {
-                if (status=="error") { // data loading error
-                    alert("There was an error loading the data: " + xhr.statusText);
-                }
-                else if (status=="success") {
-                    
-                    
-                    // var i = 0;
-                    // $("#myData tr").each( function () {
-                    //     $("#record").html($(this));
-                    //     var recdat = [];
-                    //     var j = 0;
-                    //     $("#record td").each(function () {
-                    //         recdat[j++] = $(this).text();
-                    //     });
-                    //     if (recdat.length > 0) {
-                    //         units[i++] = {"code":recdat[0],
-                    //                     "name":recdat[1],
-                    //                     "assessor":recdat[2]};
-                    //     }
-                    // });
+            $("#dataHolder").hide();
 
+            loadContactData();
 
-                    // contactHeaders = $("th",$("#myData")).map(function() {
-                    //     return this.innerHTML;
-                    // }).get();
-
-                    // contactDetails = $("tr",$("#myData")).map(function() {
-                    //     return [$("td",this).map(function() {
-                    //         return this.innerHTML;
-                    //     }).get()];
-                    // }).get();
-                    // alert(contactDetails);
-                    // document.write(contactDetails);
-                }
+            // update contact data from edit contact page form
+            $( "#contactform" ).submit(function( event ) {
+                var newDetails = $(this).serializeArray(); // put form data into array
+                contactDetails = sessionStorage.getObj("contacts");
+                contactDetails[selectedContact] = updateContact(newDetails);
+                sessionStorage.setObj("contacts", contactDetails);
+                $("body").pagecontainer("change", "#contactList", {  }); // load contact list page
+                event.preventDefault();
             });
+
+            // delete contact data from edit contact page form
+            $( "#deletecontact" ).bind( "click", function(event, ui) {
+                contactDetails = sessionStorage.getObj("contacts");
+                contactDetails.splice(selectedContact,1); // remove contact object from array
+                sessionStorage.setObj("contacts", contactDetails);
+                $("body").pagecontainer("change", "#contactList", {  }); // load contact list page
+            });
+
+            // update config data from config form
+            $( "#configform" ).submit(function( event ) {
+                var configDetails = $(this).serializeArray(); // put form data into array
+                var newU;
+
+                // search config object/arrays to see if new url given
+                while (!newUrl) {
+                    $(configDetails).each(function() {
+                        var n = $(this).attr("name");
+                        // if name contains 'baseurl'
+                        if (n === "baseurl"){
+                            newUrl = true;
+                            newU = $(this).attr("value");
+                        };
+                    });
+                };
+
+                // set new base url if given
+                if (newUrl) {
+                    url = newU;
+                    // try and add new data
+                    loadContactData();
+                };
+                $("body").pagecontainer("change", "#main", {  }); // load homepage
+                event.preventDefault();
+            });
+
+            // add contact data from add contact form
+            $( "#addcontactform" ).submit(function( event ) {
+                var newDetails = $(this).serializeArray(); // put form data into array
+                var newDetailsObj = updateContact(newDetails);
+
+                // format array and add to local storage
+                contactDetails = sessionStorage.getObj("contacts");
+                contactDetails.push(newDetailsObj);
+                sessionStorage.setObj("contacts", contactDetails);
+                $("body").pagecontainer("change", "#contactList", {  }); // load contact list page
+                event.preventDefault();
+            });
+
+        }); // end of document ready functions
+
+        // prepare contact list page
+        $(document).on("pagebeforeshow","#contactList", function() {
+            $("#clist").empty();
+            contactDetails = sessionStorage.getObj("contacts"); // get contacts
+
+            // add html to create list elements
+            for (var i=0; i<contactDetails.length; i++){  
+                $("#clist").append("<li><a href='#edit' id='list"+i+"'>" + contactDetails[i].surname+", "+contactDetails[i].othernames+"<a></li>");
+            }
+
+            $("#clist").listview("refresh"); // refresh jquery mobile list
+            for (var i=0; i<contactDetails.length; i++){  
+                
+                // add list html to elements
+                $("#list"+i).on("tap", i, function (evt) { 
+                    selectedContact=evt.data; // value extracted by evt.data 
+                });
+            }
         });
-	</script>
+
+        // prepare edit contact page
+        $(document).on("pagebeforeshow","#edit", function() {
+
+            // get data from local storage
+            contactDetails = sessionStorage.getObj("contacts");
+
+            $("#surname").val(contactDetails[selectedContact].surname);
+            $("#othernames").val(contactDetails[selectedContact].othernames);
+            $("#company").val(contactDetails[selectedContact].company);
+            $("#email").val(contactDetails[selectedContact].email);
+            $("#phone1").val(contactDetails[selectedContact].phone1);
+            $("#phone2").val(contactDetails[selectedContact].phone2);
+            $("#snailmail").val(contactDetails[selectedContact].snailmail);
+        });
+
+        //prepare config page 
+        $(document).on("pagebeforeshow","#config", function() {
+            document.getElementById("baseurl").value = url; // display current url for source data
+        });
+
+        // prepare add contact page
+        $(document).on("pagebeforeshow","#addcontact", function() {
+            $("#addcontactform")[0].reset(); // reset fields
+        });
+    </script>
 
 </head>
-<body>
-    <!-- <div id="record"></div> -->
-    <!-- MAIN PAGE -->
-	<div data-role="page">
-		<div data-role="header">
-			<h1>Contact Information for Units</h1>
-		</div>
-		<div data-role="main" class="ui-content">
-            <div id="pageData"></div>
-            <a href="#unitList" class="ui-btn">List units</a>
-		</div>
-		<div data-role="footer">
-			<h1>Footer Text</h1>
-		</div>
-	</div>
+<body data-contact-details="">
+    <div id="dataHolder"></div>
 
-    <!-- VIEW UNITS PAGE -->
-    <div data-role="page" id="unitList">
+    <!-- MAIN PAGE -->
+    <div data-role="page" id="main">
+        <div data-role="header" data-theme="a">
+            <h1>Contact Information App</h1>
+        </div>
+        <div data-role="main" class="ui-content">
+            <center>
+                <a href="#homepageHelp" data-rel="popup" class="ui-btn ui-btn-a ui-btn-inline ui-corner-all">Help</a>
+                <div data-role="popup" id="homepageHelp">
+                    <p>This app allows you to view, add or delete contacts, and where the data is sourced from. Data must be in html table to work.</p>
+                </div>
+            </center>
+            <div id="pageData"></div>
+            <a href="#addcontact" class="ui-btn">Add contacts</a>
+            <a href="#contactList" class="ui-btn">List contacts</a>
+            <a href="#config" class="ui-btn">Configuration</a>
+        </div>
+        <div data-role="footer" id="footer">
+            <h1 style="color:black;">App by Dan Hogan - 22108261</h1>
+        </div>
+    </div>
+
+    <!-- CONFIG PAGE -->
+    <div data-role="page" id="config" data-theme="b">
+        <div data-role="header">
+            <h1>Configuration Options</h1>
+        </div>
+        <div data-role="main">
+            <a href="#main" class="ui-btn ui-btn-a" data-inset="true">Homepage</a>
+            <center>
+                <a href="#configHelp" data-rel="popup" class="ui-btn ui-btn-a ui-btn-inline ui-corner-all">Help</a>
+                <div data-role="popup" id="configHelp">
+                    <p>The url is used for sourcing the contact data. The source file data must use a html table and be formatted correctly.</p>
+                </div>
+            </center>
+            <form method="post" id="configform">
+                <label for="baseurl">Base URL to collect data:</label>
+                <input type="text" id="baseurl" name="baseurl" default="hello"></input>
+                <center>
+                    <input type="submit" value="Update" data-inline="true">
+                </center>
+            </form>
+        </div>
+    </div>
+
+    <!-- VIEW CONTACTS PAGE -->
+    <div data-role="page" id="contactList" data-theme="c">
       <div data-role="header">
-        <h1>Unit List</h1>
+        <h1>Contact List</h1>
       </div>
       <div data-role="main">
-          <ul data-role="listview" data-inset="true" id="ulist">
-          </ul>
+        <a href="#main" class="ui-btn ui-btn-a" data-inset="true">Homepage</a>
+        <center>
+            <a href="#viewContactsHelp" data-rel="popup" class="ui-btn ui-btn-a ui-btn-inline ui-corner-all">Help</a>
+            <div data-role="popup" id="viewContactsHelp">
+                <p>Use the search bar to search through contacts. Select a contact to edit or delete.</p>
+            </div>
+        </center>
+        <form class="ui-filterable">
+          <input id="searchContacts" data-type="search">
+        </form>
+        <ul data-role="listview" data-inset="true" id="clist" data-autodividers="true" data-filter="true" data-input="#searchContacts">
+        </ul>
       </div>
     </div>
 
-    <!-- EDIT UNITS PAGE -->
+    <!-- EDIT CONTACTS PAGE -->
+    <div data-role="page" id="edit" data-theme="b">
+        <div data-role="header">
+            <h1>Edit Contact</h1>
+        </div>
+        <div data-role="main">
+            <a href="#main" class="ui-btn ui-btn-a" data-inset="true">Homepage</a>
+            <center>
+                <a href="#editContactsHelp" data-rel="popup" class="ui-btn ui-btn-a ui-btn-inline ui-corner-all">Help</a>
+                <div data-role="popup" id="editContactsHelp">
+                    <p>Update or add details for the contact, hit 'update' to update. Delete will remove the contact until a browser restart.</p>
+                </div>
+            </center>
+            <form method="post" action="" id="contactform">
+                <label for="surname">Surname:</label>
+                <input type="text" id="surname" name="surname"></input>
+                <label for="othernames">Other Names:</label>
+                <input type="text" id="othernames" name="othernames"></input>
+                <label for="company">Company:</label>
+                <input type="text" id="company" name="company"></input>
+                <label for="email">Email:</label>
+                <input type="text" id="email" name="email"></input>
+                <label for="phone1">Phone 1:</label>
+                <input type="text" id="phone1" name="phone1"></input>
+                <label for="phone2">Phone 2:</label>
+                <input type="text" id="phone2" name="phone2"></input>
+                <label for="snailmail">Snail Mail:</label>
+                <input type="text" id="snailmail" name="snailmail"></input>
+                <center>
+                    <input type="submit" value="Update" class="ui-btn ui-btn-inline" data-inline="true">
+                    <a href="#deleteconfirmation" data-rel="dialog" class="ui-btn ui-input-btn ui-corner-all ui-shadow ui-btn-inline" data-transition="pop">Delete</a>
+                </center>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADD CONTACTS PAGE -->
+    <div data-role="page" id="addcontact" data-theme="b">
+      <div data-role="header">
+        <h1>Add Contact</h1>
+      </div>
+      <div data-role="main">
+        <a href="#main" class="ui-btn ui-btn-a" data-inset="true">Homepage</a>
+        <center>
+            <a href="#addContactsHelp" data-rel="popup" class="ui-btn ui-btn-a ui-btn-inline ui-corner-all">Help</a>
+            <div data-role="popup" id="addContactsHelp">
+                <p>Enter the details of the contact in the fields below and hit 'Add Contact' to save to the list of contacts.</p>
+            </div>
+        </center>
+        <form method="post" action="" id="addcontactform">
+            <label for="surname">Surname:</label>
+            <input type="text" id="surname" name="surname"></input>
+            <label for="othernames">Other Names:</label>
+            <input type="text" id="othernames" name="othernames"></input>
+            <label for="company">Company:</label>
+            <input type="text" id="company" name="company"></input>
+            <label for="email">Email:</label>
+            <input type="text" id="email" name="email"></input>
+            <label for="phone1">Phone 1:</label>
+            <input type="text" id="phone1" name="phone1"></input>
+            <label for="phone2">Phone 2:</label>
+            <input type="text" id="phone2" name="phone2"></input>
+            <label for="snailmail">Snail Mail:</label>
+            <input type="text" id="snailmail" name="snailmail"></input>
+            <center>
+                <input type="submit" value="Add Contact" data-inline="true">
+            </center>
+        </form>
+      </div>
+    </div>
+
+    <!-- DELETE CONTACT CONFIRMATION -->
+    <div data-role="page" id="deleteconfirmation" data-close-btn="right" data-theme="b">
+      <div data-role="header">
+        <h1>Delete Contact</h1>
+      </div>
+      <div data-role="main" class="ui-content">
+        <center>
+            <p>Are you sure you wish to delete this contact?</p>
+            <a href="#anylink" class="ui-btn ui-btn-inline ui-corner-all ui-shadow" id="deletecontact">Yes</a>
+            <a href="#anylink" class="ui-btn ui-btn-inline ui-corner-all ui-shadow" data-rel="back">No</a>
+        </center>
+      </div>
+    </div>
+
 </body>
 </html>

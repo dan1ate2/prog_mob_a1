@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<title>CSC73010 Part1 dhogan15</title>
+	<title>CSC73010 A1P1 - Dan Hogan - 22108261</title>
  	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
-    <link rel="stylesheet" href="custom.css" />
 	<script src="http://code.jquery.com/jquery-1.12.0.min.js"></script>
 	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
 
@@ -101,11 +100,6 @@
                 event.preventDefault();
             });
 
-
-
-
-
-
             // delete contact data from edit contact page form
             $( "#deletecontact" ).bind( "click", function(event, ui) {
                 contactDetails = sessionStorage.getObj("contacts");
@@ -114,16 +108,12 @@
                 $("body").pagecontainer("change", "#contactList", {  }); // load contact list page
             });
 
-
-
-
-
-
             // update config data from config form
             $( "#configform" ).submit(function( event ) {
                 var configDetails = $(this).serializeArray(); // put form data into array
                 var newU;
 
+                // search config object/arrays to see if new url given
                 while (!newUrl) {
                     $(configDetails).each(function() {
                         var n = $(this).attr("name");
@@ -171,9 +161,6 @@
             }
 
             $("#clist").listview("refresh"); // refresh jquery mobile list
-            
-            // have to insert event handler after list refreshed!!!!
-            // because html element not there yet
             for (var i=0; i<contactDetails.length; i++){  
                 
                 // add list html to elements
@@ -199,11 +186,14 @@
         });
 
         //prepare config page 
-        
         $(document).on("pagebeforeshow","#config", function() {
-            document.getElementById("baseurl").value = url;
+            document.getElementById("baseurl").value = url; // display current url for source data
         });
 
+        // prepare add contact page
+        $(document).on("pagebeforeshow","#addcontact", function() {
+            $("#addcontactform")[0].reset(); // reset fields
+        });
 	</script>
 
 </head>
@@ -222,7 +212,7 @@
             <a href="#config" class="ui-btn">Configuration</a>
 		</div>
 		<div data-role="footer" id="footer">
-			<h1>Footer Text</h1>
+			<h1 style="color:grey;">App by Dan Hogan - 22108261</h1>
 		</div>
 	</div>
 
@@ -278,8 +268,10 @@
                 <input type="text" id="phone2" name="phone2"></input>
                 <label for="snailmail">Snail Mail:</label>
                 <input type="text" id="snailmail" name="snailmail"></input>
-                <input type="submit" value="Update">
-                <input type="button" value="Delete" id="deletecontact">
+                <center>
+                    <input type="submit" value="Update" class="ui-btn ui-btn-inline" data-inline="true">
+                    <a href="#deleteconfirmation" data-rel="dialog" class="ui-btn ui-input-btn ui-corner-all ui-shadow ui-btn-inline" data-transition="pop">Delete</a>
+                </center>
             </form>
         </div>
     </div>
@@ -306,8 +298,24 @@
             <input type="text" id="phone2" name="phone2"></input>
             <label for="snailmail">Snail Mail:</label>
             <input type="text" id="snailmail" name="snailmail"></input>
-            <input type="submit" value="Add Contact">
+            <center>
+                <input type="submit" value="Add Contact" data-inline="true">
+            </center>
         </form>
+      </div>
+    </div>
+
+    <!-- DELETE CONTACT CONFIRMATION -->
+    <div data-role="page" id="deleteconfirmation" data-close-btn="right">
+      <div data-role="header">
+        <h1>Delete Contact</h1>
+      </div>
+      <div data-role="main" class="ui-content">
+        <center>
+            <p>Are you sure you wish to delete this contact?</p>
+            <a href="#anylink" class="ui-btn ui-btn-inline ui-corner-all ui-shadow" id="deletecontact">Yes</a>
+            <a href="#anylink" class="ui-btn ui-btn-inline ui-corner-all ui-shadow" data-rel="back">No</a>
+        </center>
       </div>
     </div>
 
